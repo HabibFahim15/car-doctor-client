@@ -3,48 +3,56 @@ import img from '../../assets/images/login/login.svg'
 import { useContext } from 'react';
 import { AuthContext } from '../../Providers/AuthProvider';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 
 const Login = () => {
-  const {signIn} = useContext(AuthContext);
+  const { signIn } = useContext(AuthContext);
 
   const location = useLocation();
   const navigate = useNavigate()
   console.log(location);
 
 
-  const handleLogin = event =>{
-  event.preventDefault()
-  const form = event.target;
-  const email = form.email.value;
-  const password = form.password.value;
-  console.log(email,password);
+  const handleLogin = event => {
+    event.preventDefault()
+    const form = event.target;
+    const email = form.email.value;
+    const password = form.password.value;
 
-  signIn(email, password)
-  .then(result => {
-    const user = result.user;
-    console.log(user);
-    if(user){
-      const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.onmouseenter = Swal.stopTimer;
-          toast.onmouseleave = Swal.resumeTimer;
+    signIn(email, password)
+      .then(result => {
+        const loggedInUser = result.user;
+        console.log(loggedInUser);
+        const user = { email };
+        if (loggedInUser) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.onmouseenter = Swal.stopTimer;
+              toast.onmouseleave = Swal.resumeTimer;
+            }
+          });
+          Toast.fire({
+            icon: "success",
+            title: "Signed in successfully"
+          });
+
         }
-      });
-      Toast.fire({
-        icon: "success",
-        title: "Signed in successfully"
-      });
-    
-    }
-    navigate(location?.state ? location.state : '/')
-  })
-  .catch(error => console.log(error))
+        // get access 
+        axios.post('http://localhost:5000/jwt', user , { withCredentials: true })
+          .then(res => {
+            console.log(res.data);
+            if (res.data.success) {
+              navigate(location?.state ? location.state : '/')
+            }
+          })
+      })
+      .catch(error => console.log(error))
   }
 
   return (
@@ -57,7 +65,7 @@ const Login = () => {
         </div>
         <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
 
-        {/* form  start*/}
+          {/* form  start*/}
 
           <form onSubmit={handleLogin} className="card-body">
             <h1 className="text-5xl text-center font-bold">Login now!</h1>
